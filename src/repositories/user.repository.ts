@@ -13,6 +13,14 @@ export function getUserById(id: string) :Promise<User | null> {
     })
 }
 
+export function getUserByEmail(email: string) :Promise<User | null> {
+    return prisma.user.findUnique({
+        where: {
+            email: email
+        }
+    })
+}
+
 export function createUser(data: Prisma.UserCreateInput) : Promise<User> {
     return prisma.user.create({
         data: data

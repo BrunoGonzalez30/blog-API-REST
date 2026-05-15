@@ -15,8 +15,8 @@ export async function getUserByIdService(id: string) {
 }
 
 export async function createUserService(data: Prisma.UserCreateInput) {
-    if (!data.name || !data.surname || !data.email) {
-        throw new AppError('Missing required fields: name, surname, email', 400);
+    if (!data.name || !data.surname || !data.email || !data.password) {
+        throw new AppError('Missing required fields: name, surname, email, password', 400);
     }
 
     try {
