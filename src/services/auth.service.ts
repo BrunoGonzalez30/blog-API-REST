@@ -1,9 +1,11 @@
-import { getUserByEmail, createUser } from "../repositories/user.repository.js";
+import { getUserByEmail, createUser, getUserById } from "../repositories/user.repository.js";
 import { Prisma } from '../generated/prisma/index.js';
 import bcrypt from 'bcrypt';
 import AppError from "../errors/AppError.js";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+import { createRefreshToken, findRefreshToken, deleteRefreshToken, deleteAllUserRefreshTokens } from "../repositories/refreshToken.repository.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -54,6 +56,48 @@ export async function loginService(email: string, password: string) {
 
     const {password: _, ...userWithoutPassword} = user;
     const token = jwt.sign({userId: user.id, email: user.email}, JWT_SECRET!, {expiresIn: '1h'});
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    return {token, user: userWithoutPassword};
+    const createdRefreshToken = await createRefreshToken(refreshToken, user.id, expiresAt);
+
+    return {token, refreshToken, user: userWithoutPassword};
+}
+
+export async function refreshTokenService(token: string) {
+    const existingToken = await findRefreshToken(token);
+    if (!existingToken) {
+        throw new AppError('Invalid refresh token', 401);
+    }
+
+    if (existingToken.expiresAt < new Date()) {
+        await deleteRefreshToken(token);
+        throw new AppError('Refresh token expired', 401);
+    }
+
+    const user = await getUserById(existingToken.userId);
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    const {password: _, ...userWithoutPassword} = user;
+    const newToken = jwt.sign({userId: user.id, email: user.email}, JWT_SECRET!, {expiresIn: '1h'});
+    return {token: newToken, user: userWithoutPassword};
+}
+
+export async function logoutService(token: string) {
+
+    try {
+        await deleteRefreshToken(token);
+    } catch (error: any) {
+        const code = error.code ?? error.cause?.code;
+        if (code === 'P2025') {
+            throw new AppError('Refresh token not found', 404);
+        }
+        throw error;
+    }
+}
+
+export async function logoutAllService(userId: string) {
+     await deleteAllUserRefreshTokens(userId);
 }
