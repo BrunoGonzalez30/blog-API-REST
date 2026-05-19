@@ -18,6 +18,7 @@ model User {
   surname String
   email String @unique
   password String
+  role Role @default(USER)
   posts Post[]
   refreshTokens RefreshToken[]
 }
@@ -40,4 +41,9 @@ model RefreshToken {
   userId String
 
   user User @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
 }

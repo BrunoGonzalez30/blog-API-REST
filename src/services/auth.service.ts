@@ -55,7 +55,7 @@ export async function loginService(email: string, password: string) {
     }
 
     const {password: _, ...userWithoutPassword} = user;
-    const token = jwt.sign({userId: user.id, email: user.email}, JWT_SECRET!, {expiresIn: '1h'});
+    const token = jwt.sign({userId: user.id, email: user.email, role: user.role}, JWT_SECRET!, {expiresIn: '1h'});
     const refreshToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
@@ -81,7 +81,7 @@ export async function refreshTokenService(token: string) {
     }
 
     const {password: _, ...userWithoutPassword} = user;
-    const newToken = jwt.sign({userId: user.id, email: user.email}, JWT_SECRET!, {expiresIn: '1h'});
+    const newToken = jwt.sign({userId: user.id, email: user.email, role: user.role}, JWT_SECRET!, {expiresIn: '1h'});
     return {token: newToken, user: userWithoutPassword};
 }
 
