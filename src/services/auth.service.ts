@@ -80,9 +80,8 @@ export async function refreshTokenService(token: string) {
         throw new AppError('User not found', 404);
     }
 
-    const {password: _, ...userWithoutPassword} = user;
     const newToken = jwt.sign({userId: user.id, email: user.email, role: user.role}, JWT_SECRET!, {expiresIn: '1h'});
-    return {token: newToken, user: userWithoutPassword};
+    return {token: newToken, user: user};
 }
 
 export async function logoutService(token: string) {

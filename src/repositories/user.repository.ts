@@ -1,15 +1,18 @@
 import prisma from '../lib/prisma.js';
 import {User, Prisma} from '../generated/prisma/index.js';
 
-export function getAllUsers() : Promise<User[]> { 
-    return prisma.user.findMany();
+export function getAllUsers() { 
+    return prisma.user.findMany({
+        omit: {password: true}
+    });
 }
 
-export function getUserById(id: string) :Promise<User | null> {
+export function getUserById(id: string) {
     return prisma.user.findUnique({
         where: {
             id: id
-        }
+        },
+        omit: {password: true}
     })
 }
 
