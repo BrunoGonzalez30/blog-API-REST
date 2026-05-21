@@ -34,9 +34,20 @@ export async function createPostService(title: string, content: string, authorId
 
 }
 
-export async function updatePostService(id: string, data: Prisma.PostUpdateInput) {
+export async function updatePostService(id: string, data: Prisma.PostUpdateInput, userId: string) {
     try {
+        const post = await getPostById(id);
+        console.log('post authorId:', post?.authorId);
+        if (!post) {
+            throw new AppError(`Post with id ${id} not found`, 404);
+        }
+
+        if (post.authorId !== userId) {
+            throw new AppError('You are not authorized to update this post', 403);
+        }
+
         return await updatePost(id, data);
+
     } catch (error: any) {
         if (error.code === 'P2025') {
             throw new AppError(`Post with id ${id} not found`, 404);
@@ -45,9 +56,19 @@ export async function updatePostService(id: string, data: Prisma.PostUpdateInput
     }
 }
 
-export async function deletePostService(id: string) {
+export async function deletePostService(id: string, userIdFromToken: string, userRole: string) {
     try {
+        const post = await getPostById(id);
+
+        if (!post) {
+            throw new AppError(`Post with id ${id} not found`, 404);
+        }
+        if (post.authorId !== userIdFromToken && userRole !== 'ADMIN') {
+            throw new AppError('You are not authorized to delete this post', 403);
+        }
+
       return await deletePost(id);  
+
     } catch (error: any) {
         if (error.code === 'P2025') {
             throw new AppError(`Post with id ${id} not found`, 404);
@@ -63,6 +84,6 @@ export async function getPostsByUserIdService(userId: string) {
     if (!user) {
         throw new AppError(`User with id ${userId} not found`, 404);
     }
-    
+
     return await getPostsByUserId(userId);
 }

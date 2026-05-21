@@ -34,7 +34,7 @@ export async function createUserService(data: Prisma.UserCreateInput) {
     }
 }
 
-export async function updateUserService(id: string, data: Prisma.UserUpdateInput) {
+export async function updateUserService(id: string, data: Prisma.UserUpdateInput, userId: string) {
     try {
         return await updateUser(id, data);
     } catch (error: any) {

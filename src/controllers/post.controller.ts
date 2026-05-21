@@ -33,8 +33,12 @@ export async function createPost(req: Request, res: Response, next: NextFunction
 export async function updatePost(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id as string;
     const data = req.body;
+    const userId = req.user?.userId as string;
+    console.log('userId from token:', req.user?.userId);
+    console.log('user role from token:', req.user?.role);
+
     try {
-        const updatePost = await updatePostService(id, data);
+        const updatePost = await updatePostService(id, data, userId);
         return res.status(200).json(updatePost);
     } catch (error) {
         next(error);
@@ -43,8 +47,11 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
 
 export async function deletePost(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id as string;
+    const userId = req.user?.userId as string;
+    const userRole = req.user?.role as string;
+    console.log('user role from token:', req.user?.role);
     try {
-        await deletePostService(id);
+        await deletePostService(id, userId, userRole);
         return res.status(204).send();
     } catch (error) {
         next(error);
